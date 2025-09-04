@@ -1,0 +1,4 @@
+casa
+arvore
+gato
+cachorro

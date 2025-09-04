@@ -9,7 +9,6 @@ logs/
 *.out
 
 # Diretórios de entrada/saída da aplicação
-/in/
 /out/
 
 # Configuração de IDEs
