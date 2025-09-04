@@ -1,6 +1,8 @@
-blue
-black
-white
-purple
-blue
-brown
+apple
+banana
+melon
+stranbery
+orange
+grapes
+mango
+coconut

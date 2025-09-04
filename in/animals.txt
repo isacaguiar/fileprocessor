@@ -1,4 +1,9 @@
-casa
-arvore
-gato
-cachorro
+cat
+dog
+bird
+lion
+bear
+aligator
+horse
+elephant
+ant
