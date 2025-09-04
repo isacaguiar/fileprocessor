@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,10 +42,19 @@ public class DirectoryProcessor {
   public static void main(String[] args) throws InterruptedException {
     Path inputDir  = Paths.get(args.length > 0 ? args[0] : "in");
     Path outputDir = Paths.get(args.length > 1 ? args[1] : "out");
-    int nThreads   = args.length > 2 ? Integer.parseInt(args[2]) : 6;
+    int nThreads;
+    try {
+      nThreads = args.length > 2 ? Integer.parseInt(args[2]) : 6;
+    } catch (NumberFormatException e) {
+      nThreads = 6;
+      log.warn("nThreads inválido, usando default: {}", nThreads);
+    }
+    if (!Files.exists(inputDir) || !Files.isDirectory(inputDir)) {
+      log.error("InputDir inválido: {}", inputDir);
+      System.exit(2);
+    }
 
-    DirectoryProcessor processor =
-        new DirectoryProcessor(inputDir, outputDir, nThreads);
+    DirectoryProcessor processor = new DirectoryProcessor(inputDir, outputDir, nThreads);
     log.info("Started with params inputDir: {} outputDir {}, nThreads {}.", inputDir, outputDir, nThreads);
     processor.execute();
     log.info("Finish...");
@@ -53,10 +63,14 @@ public class DirectoryProcessor {
   protected void execute() throws InterruptedException {
     createDirectory();
     ExecutorService pool = initPool();
-    List<Path> files = collectorFiles();
-    List<Future<Path>> futures = process(pool, files);
-    StateExecution stateExecution = waiting(futures);
-    finishing(pool,stateExecution);
+    StateExecution state = new StateExecution();
+    try {
+      List<Path> files = collectFiles();
+      List<Future<Path>> futures = process(pool, files);
+      state = waiting(futures); // não relança
+    } finally {
+      finishing(pool, state);
+    }
   }
 
   private void createDirectory() {
@@ -80,20 +94,21 @@ public class DirectoryProcessor {
   /**
    * Collects text files
    */
-  private List<Path> collectorFiles() {
-    List<Path> files;
+  private List<Path> collectFiles() {
     try {
       try (Stream<Path> stream = Files.walk(inputDir)) {
-        files = stream
+        return stream
             .filter(Files::isRegularFile)
-            .filter(p -> p.toString().endsWith(".txt"))
+            .filter(p -> {
+              String s = p.getFileName().toString();
+              return s.length() >= 4 && s.regionMatches(true, s.length() - 4, ".txt", 0, 4);
+            })
             .collect(Collectors.toList());
       }
     } catch (IOException e) {
       log.error("Error listing files in {}", inputDir, e);
       throw new RuntimeException("Error listing files in " + inputDir, e);
     }
-    return files;
   }
 
   private ExecutorService initPool() {
@@ -108,9 +123,12 @@ public class DirectoryProcessor {
     int taskId = 0;
     for (Path in : files) {
       taskId++;
-      log.info("Executing task {} in thread {}", taskId, Thread.currentThread().getName());
+      log.info("Submitting task {} for {}", taskId, in);
       int finalTaskId = taskId;
       futures.add(pool.submit(() -> {
+        long start = System.nanoTime();
+        String worker = Thread.currentThread().getName();
+
         Path rel   = inputDir.relativize(in);
         Path out   = outputDir.resolve(rel);
         Files.createDirectories(out.getParent());
@@ -130,7 +148,8 @@ public class DirectoryProcessor {
           log.error("Failed to process: {}", in, e);
           throw new IOException("Failed to process: " + in, e);
         }
-        log.info("Task completed {}", finalTaskId);
+        long ms = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        log.info("Task {} ({}) completed in {} ms on {}", finalTaskId, rel, ms, worker);
         return out;
       }));
     }
@@ -145,15 +164,20 @@ public class DirectoryProcessor {
     StateExecution stateExecution = new StateExecution();
     for (Future<Path> f : futures) {
       try {
-        f.get();
+        f.get(2, TimeUnit.MINUTES);
         stateExecution.incrementOk();
       } catch (ExecutionException ee) {
         stateExecution.incrementFail();
-        log.error("Error: {}", ee.getCause().getMessage(), ee);
+        log.error("Error: {}", ee.getCause() != null ? ee.getCause().getMessage() : ee.getMessage(), ee);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
+        stateExecution.incrementFail();
         log.error("Interrupted waiting for tasks", ie);
-        throw new RuntimeException("Interrupted waiting for tasks", ie);
+        break;
+      } catch (TimeoutException te) {
+        stateExecution.incrementFail();
+        log.error("Timeout waiting task result; cancelling...");
+        f.cancel(true);
       }
     }
     return stateExecution;
@@ -161,11 +185,18 @@ public class DirectoryProcessor {
 
   private void finishing(ExecutorService pool, StateExecution stateExecution) throws InterruptedException {
     pool.shutdown();
-    pool.awaitTermination(1, TimeUnit.MINUTES);
-
+    if (!pool.awaitTermination(1, TimeUnit.MINUTES)) {
+      log.warn("Timeout waiting workers. Forcing shutdownNow()...");
+      List<Runnable> dropped = pool.shutdownNow();
+      log.warn("Dropped {} pending tasks", dropped.size());
+      if (!pool.awaitTermination(30, TimeUnit.SECONDS)) {
+        log.error("Workers did not terminate after shutdownNow()");
+      }
+    }
     log.info("Created: {} | Fail: {}", stateExecution.getOk(), stateExecution.getFail());
     log.info("Lines processed: {}", processedLines.sum());
   }
+
 
   static class StateExecution {
     private int ok;
