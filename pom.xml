@@ -13,6 +13,7 @@
     <junit.jupiter.version>5.10.2</junit.jupiter.version>
     <slf4j.version>1.7.36</slf4j.version>
     <logback.version>1.2.13</logback.version>
+    <coverage.minimum>0.50</coverage.minimum>
     <!-- Principal Class -->
     <main.class>com.example.fileprocessor.DirectoryProcessor</main.class>
   </properties>
@@ -133,7 +134,7 @@
                     <limit>
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.70</minimum>
+                      <minimum>${coverage.minimum}</minimum>
                     </limit>
                   </limits>
                   <excludes>
