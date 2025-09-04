@@ -11,8 +11,8 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <junit.jupiter.version>5.10.2</junit.jupiter.version>
-    <slf4j.version>2.0.13</slf4j.version>
-    <logback.version>1.5.13</logback.version>
+    <slf4j.version>1.7.36</slf4j.version>
+    <logback.version>1.2.13</logback.version>
     <!-- Principal Class -->
     <main.class>com.example.fileprocessor.DirectoryProcessor</main.class>
   </properties>
