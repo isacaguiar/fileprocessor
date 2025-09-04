@@ -73,9 +73,9 @@ flowchart TD
     C --> D[createDirectory()]
     C --> E[collectorFiles()]
     C --> F[initPool()]
-    C --> G[process(pool, files)<br/>submit Callables por arquivo]
-    C --> H[waiting(futures)<br/>Future#get + contagem OK/FAIL]
-    C --> I[finishing(pool, state)<br/>shutdown + awaitTermination]
+    C --> G[process(pool, files)\nsubmit Callables por arquivo]
+    C --> H[waiting(futures)\nFuture#get + contagem OK/FAIL]
+    C --> I[finishing(pool, state)\nshutdown + awaitTermination]
     H --> I
 ```
 
