@@ -1,0 +1,39 @@
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Arquivos de log
+logs/
+*.log
+*.out
+
+# Diretórios de entrada/saída da aplicação
+/in/
+/out/
+
+# Configuração de IDEs
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+### Eclipse ###
+.project
+.classpath
+.settings/
+bin/
+
+### VS Code ###
+.vscode/
+
+# Arquivos temporários
+*.tmp
+*.swp
+*.swo
+*~
+
+# Arquivos do sistema
+.DS_Store

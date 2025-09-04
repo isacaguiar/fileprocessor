@@ -1,0 +1,47 @@
+name: CI - Java 8 Maven (File Processor)
+
+on:
+  push:
+    branches: [ "main", "developer" ]
+  pull_request:
+    branches: [ "main", "developer" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Temurin JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: 'maven'
+
+      - name: Show Java & Maven versions
+        run: |
+          java -version
+          mvn -version
+
+      - name: Build & Test
+        run: mvn -B -ntp clean verify
+
+      - name: Package shaded jar
+        run: mvn -B -ntp -DskipTests package
+
+      - name: Upload artifact (JAR + reports)
+        uses: actions/upload-artifact@v4
+        with:
+          name: file-processor-build
+          path: |
+            target/*-all.jar
+            target/surefire-reports/**
+            target/site/**
+          if-no-files-found: warn
