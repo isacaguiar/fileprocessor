@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  build-test-package:
+  build-test-coverage:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,23 +25,24 @@ jobs:
           java-version: '8'
           cache: 'maven'
 
-      - name: Show Java & Maven versions
-        run: |
-          java -version
-          mvn -version
-
-      - name: Build & Test
+      - name: Build, Test and Coverage (JaCoCo)
         run: mvn -B -ntp clean verify
 
-      - name: Package shaded jar
-        run: mvn -B -ntp -DskipTests package
-
-      - name: Upload artifact (JAR + reports)
+      - name: Upload coverage reports (artifact)
         uses: actions/upload-artifact@v4
         with:
-          name: file-processor-build
+          name: coverage-reports
           path: |
-            target/*-all.jar
+            target/site/jacoco/**
+            target/jacoco.exec
             target/surefire-reports/**
-            target/site/**
           if-no-files-found: warn
+
+      - name: Upload to Codecov (optional)
+        if: ${{ success() }}
+        uses: codecov/codecov-action@v4
+        with:
+          files: target/site/jacoco/jacoco.xml
+          flags: unittests
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
