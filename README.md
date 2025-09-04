@@ -68,15 +68,14 @@ A implementação do `DirectoryProcessor` traz melhorias:
 
 ```mermaid
 flowchart TD
-    A[main(args)] --> B[Instantiate DirectoryProcessor]
-    B --> C[execute()]
-    C --> D[createDirectory()]
-    C --> E[collectorFiles()]
-    C --> F[initPool()]
-    C --> G[process(pool, files)<br/>submit Callables por arquivo]
-    C --> H[waiting(futures)<br/>Future#get + contagem OK/FAIL]
-    C --> I[finishing(pool, state)<br/>shutdown + awaitTermination]
-    H --> I
+    A[main] --> B[Instantiate DirectoryProcessor]
+    B --> C[execute]
+    C --> D[createDirectory]
+    C --> E[collectorFiles]
+    C --> F[initPool]
+    C --> G[process]
+    C --> H[waiting]
+    C --> I[finishing]
 ```
 
 ---
