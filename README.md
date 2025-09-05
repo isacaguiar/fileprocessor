@@ -2,7 +2,7 @@
 
 Processamento concorrente de arquivos `.txt` em um diretório de entrada, salvando a saída (UPPERCASE) em um diretório de saída, com _logging_ estruturado e controle correto de concorrência e recursos.
 
-> Classe principal: `DirectoryProcessor` 
+> Classe principal: `DirectoryProcessor`
 
 ---
 
@@ -10,16 +10,16 @@ Processamento concorrente de arquivos `.txt` em um diretório de entrada, salvan
 
 Este projeto utiliza as seguintes tecnologias:
 
-- **Java 8** → linguagem principal de implementação.  
-- **Maven** → ferramenta de build, empacotamento e gestão de dependências.  
-- **JUnit 5** → framework de testes unitários.  
-- **SLF4J** → API de logging.  
-- **Logback** → implementação de logging (console + rotação de arquivos).  
-- **ExecutorService (Java Concurrency)** → processamento paralelo com pool de threads fixo.  
-- **LongAdder** → contador thread-safe para acompanhar o total de linhas processadas com baixa contenção.  
-- **Maven Shade Plugin** → gera JAR executável (_uber-jar_) com dependências embutidas.  
-- **Maven Exec Plugin** → permite executar a aplicação via Maven, incluindo execução automática durante o `install` (perfil `run-on-install`).  
-- **GitHub Actions** → integração contínua (CI), rodando build, testes e empacotamento no pipeline.  
+- **Java 8** → linguagem principal de implementação.
+- **Maven** → ferramenta de build, empacotamento e gestão de dependências.
+- **JUnit 5** → framework de testes unitários.
+- **SLF4J** → API de logging.
+- **Logback** → implementação de logging (console + rotação de arquivos).
+- **ExecutorService (Java Concurrency)** → processamento paralelo com pool de threads fixo.
+- **LongAdder** → contador thread-safe para acompanhar o total de linhas processadas com baixa contenção.
+- **Maven Shade Plugin** → gera JAR executável (_uber-jar_) com dependências embutidas.
+- **Maven Exec Plugin** → permite executar a aplicação via Maven, incluindo execução automática durante o `install` (perfil `run-on-install`).
+- **GitHub Actions** → integração contínua (CI), rodando build, testes e empacotamento no pipeline.
 
 ---
 
@@ -32,12 +32,12 @@ Desenvolvido como parte do processo seletivo para a vaga Senior Developer – Te
 ## 1) Análise do snippet original (fornecido no teste)
 
 **Problemas identificados:**
-- `ArrayList` global e mutável acessado por múltiplas threads (não thread-safe).  
-- 10 tarefas lendo **o mesmo arquivo** do zero (I/O redundante).  
-- `shutdown()` chamado e o programa imprime `lines.size()` **antes** das tarefas terminarem.  
-- Recursos de I/O não garantidamente fechados.  
-- Uso de `FileReader("data.txt")` com charset da plataforma e caminho fixo.  
-- Tratamento de exceções com `printStackTrace()` (ruído/sem contexto).  
+- `ArrayList` global e mutável acessado por múltiplas threads (não thread-safe).
+- 10 tarefas lendo **o mesmo arquivo** do zero (I/O redundante).
+- `shutdown()` chamado e o programa imprime `lines.size()` **antes** das tarefas terminarem.
+- Recursos de I/O não garantidamente fechados.
+- Uso de `FileReader("data.txt")` com charset da plataforma e caminho fixo.
+- Tratamento de exceções com `printStackTrace()` (ruído/sem contexto).
 
 ---
 
@@ -57,9 +57,9 @@ A implementação do `DirectoryProcessor` traz melhorias:
 | Determinismo | Conversão com `Locale.ROOT` |
 
 ### Vantagens do uso de `LongAdder`
-- Thread-safe sem locks explícitos.  
-- Melhor desempenho que `AtomicLong` sob alta concorrência (menos contenção).  
-- Mais leve que acumular todas as linhas em memória (`List<String>`).  
+- Thread-safe sem locks explícitos.
+- Melhor desempenho que `AtomicLong` sob alta concorrência (menos contenção).
+- Mais leve que acumular todas as linhas em memória (`List<String>`).
 - Método `sum()` permite recuperar o total processado.
 
 ---
@@ -68,15 +68,14 @@ A implementação do `DirectoryProcessor` traz melhorias:
 
 ```mermaid
 flowchart TD
-    A[main(args)] --> B[Instantiate DirectoryProcessor]
-    B --> C[execute()]
-    C --> D[createDirectory()]
-    C --> E[collectorFiles()]
-    C --> F[initPool()]
-    C --> G[process(pool, files)<br/>submit Callables por arquivo]
-    C --> H[waiting(futures)<br/>Future#get + contagem OK/FAIL]
-    C --> I[finishing(pool, state)<br/>shutdown + awaitTermination]
-    H --> I
+    A[main] --> B[Instantiate DirectoryProcessor]
+    B --> C[execute]
+    C --> D[createDirectory]
+    C --> E[collectorFiles]
+    C --> F[initPool]
+    C --> G[process: pool, files<br/>submit Callables por arquivo]
+    C --> H[waiting: futures<br/>Future#get + contagem OK/FAIL]
+    C --> I[finishing: pool, state<br/>shutdown + awaitTermination]
 ```
 
 ---
@@ -123,8 +122,8 @@ mvn clean package -DskipTests
 java -jar target/file-processor-1.0.0-all.jar in out 6
 ```
 
-- Arquivo final: `target/file-processor-1.0.0-all.jar`  
-- Classe principal: `com.example.fileprocessor.DirectoryProcessor` (definida em `<main.class>` no `pom.xml`).  
+- Arquivo final: `target/file-processor-1.0.0-all.jar`
+- Classe principal: `com.example.fileprocessor.DirectoryProcessor` (definida em `<main.class>` no `pom.xml`).
 
 ### b) Execução automática durante `install` (opcional)
 Também é possível rodar a aplicação automaticamente durante o `mvn install`.
@@ -133,8 +132,8 @@ Também é possível rodar a aplicação automaticamente durante o `mvn install`
 mvn clean install -Prun-on-install -Dexec.args="in out 6"
 ```
 
-- `-Prun-on-install` → ativa o perfil que executa a aplicação logo após o empacotamento.  
-- `-Dexec.args="in out 6"` → argumentos passados para a classe principal (`inputDir outputDir nThreads`).  
+- `-Prun-on-install` → ativa o perfil que executa a aplicação logo após o empacotamento.
+- `-Dexec.args="in out 6"` → argumentos passados para a classe principal (`inputDir outputDir nThreads`).
 
 ---
 
@@ -192,7 +191,7 @@ Arquivo `src/main/resources/logback.xml`:
 
 ## 8) Melhorias futuras
 
-- Nomear threads do pool (`ThreadFactory` custom).  
-- Usar `CompletionService` para colher tarefas conforme finalizam.  
-- Adicionar **retry/backoff** para falhas transitórias.  
+- Nomear threads do pool (`ThreadFactory` custom).
+- Usar `CompletionService` para colher tarefas conforme finalizam.
+- Adicionar **retry/backoff** para falhas transitórias.
 - Validar permissões de escrita no `outputDir`.  
