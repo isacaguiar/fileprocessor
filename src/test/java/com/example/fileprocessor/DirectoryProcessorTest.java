@@ -33,7 +33,7 @@ class DirectoryProcessorTest {
   }
 
   @Test
-  @DisplayName("Processes a flat file and writes UPPERCASE to the output directorya")
+  @DisplayName("Processes a flat file and writes UPPERCASE to the output directory")
   void processSingleFile_toUppercase_andCreatesOutput() throws Exception {
     Path inDir = tempDir.resolve("in");
     Path outDir = tempDir.resolve("out");
@@ -83,7 +83,7 @@ class DirectoryProcessorTest {
   }
 
   @Test
-  @DisplayName("Empty input directory does not generate files and terminates without erroro")
+  @DisplayName("Empty input directory does not generate files and terminates without error")
   void emptyInputDir_finishesGracefully() throws Exception {
     Path inDir = tempDir.resolve("in");
     Path outDir = tempDir.resolve("out");
