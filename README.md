@@ -112,16 +112,7 @@ sequenceDiagram
 
 O projeto pode ser executado de diferentes formas, dependendo da sua necessidade:
 
-### A) Compilação manual (Java puro)
-```bash
-# Compilar
-javac -cp ".:libs/*" com/example/fileprocessor/DirectoryProcessor.java
-
-# Executar (args: inputDir outputDir nThreads)
-java -cp ".:libs/*" com.example.fileprocessor.DirectoryProcessor in out 6
-```
-
-### B) Empacotar e rodar manualmente (Maven)
+### A) Empacotar e rodar manualmente (Maven)
 O `pom.xml` está configurado para gerar um **JAR executável (_uber-jar_)** com todas as dependências embutidas.
 
 ```bash
@@ -135,7 +126,7 @@ java -jar target/file-processor-1.0.0-all.jar in out 6
 - Arquivo final: `target/file-processor-1.0.0-all.jar`  
 - Classe principal: `com.example.fileprocessor.DirectoryProcessor` (definida em `<main.class>` no `pom.xml`).  
 
-### C) Execução automática durante `install` (opcional)
+### b) Execução automática durante `install` (opcional)
 Também é possível rodar a aplicação automaticamente durante o `mvn install`.
 
 ```bash
